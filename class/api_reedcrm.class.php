@@ -131,11 +131,13 @@ class ReedCRM extends DolibarrApi
 
 			$project->add_contact($affectedUserId, 'PROJECTLEADER', 'internal');
 
-//			if (!empty($config[DolibarrApiAccess::$user->id]['tag'])) {
-//				$category = new Categorie($this->db);
-//				$category->fetch($config[DolibarrApiAccess::$user->id]['tag']);
-//				$category->add_type($project, Categorie::TYPE_PROJECT);
-//			}
+			if (!empty($request_data['categories'])) {
+				$category = new Categorie($this->db);
+				foreach (explode(',', $request_data['categories']) as $cat) {
+					$category->fetch($cat);
+					$category->add_type($project, Categorie::TYPE_PROJECT);
+				}
+			}
 //
 //			$task = new Task($this->db);
 //
