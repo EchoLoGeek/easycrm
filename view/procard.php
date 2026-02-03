@@ -109,7 +109,7 @@ if (empty($resHook)) {
     // Action to create contact
     if ($action == 'create_contact') {
         require_once DOL_DOCUMENT_ROOT . '/core/lib/company.lib.php';
-        
+
         $contact = new Contact($db);
         $contact->socid = GETPOSTINT('socid') ?: (isset($object->thirdparty->id) ? $object->thirdparty->id : 0);
         $contact->lastname = GETPOST('new_contact_lastname', 'alpha');
@@ -117,10 +117,10 @@ if (empty($resHook)) {
         $contact->phone_pro = GETPOST('new_contact_phone_pro', 'alpha');
         $contact->email = GETPOST('new_contact_email', 'email');
         $contact->statut = 1; // Active
-        
+
         // Return JSON response for AJAX
         header('Content-Type: application/json');
-        
+
         if (empty($contact->lastname)) {
             echo json_encode([
                 'success' => false,
@@ -128,7 +128,7 @@ if (empty($resHook)) {
             ]);
             exit;
         }
-        
+
         if (empty($contact->socid)) {
             echo json_encode([
                 'success' => false,
@@ -136,12 +136,12 @@ if (empty($resHook)) {
             ]);
             exit;
         }
-        
+
         $result = $contact->create($user);
         if ($result > 0) {
             // Fetch the contact to get full data
             $contact->fetch($result);
-            
+
             echo json_encode([
                 'success' => true,
                 'contact_id' => $result,
@@ -200,48 +200,87 @@ if (empty($resHook)) {
 
     // Action to create ticket
     if ($action == 'create_ticket' && isModEnabled('ticket')) {
+        $error = 0;
 
-        $ticket = new Ticket($db);
 
-        // Get form data
-        $ticket->ref = $ticket->getDefaultRef($user);
-        $ticket->subject = GETPOST('ticket_subject', 'alphanohtml');
-        $ticket->message = GETPOST('ticket_message', 'restricthtml');
-        $ticket->fk_project = GETPOST('project_id');
-        $ticket->fk_soc = GETPOST('ticket_socid', 'int') ?: $societe->id;
-        $ticket->fk_user_assign = GETPOST('ticket_user_assign', 'int');
-        $ticket->type_code = GETPOST('ticket_type', 'aZ09');
-        $ticket->category_code = GETPOST('ticket_category', 'aZ09');
-        $ticket->timing = GETPOST('ticket_timing', 'int');
-        $ticket->status = 0; // New ticket
-
-        // Handle date start
-        $date_start = GETPOST('ticket_date_start', 'int');
-        if ($date_start > 0) {
-            $ticket->datec = $date_start;
-        } else {
-            $ticket->datec = dol_now();
+        // Validate required fields
+        if (empty(GETPOST('ticket_subject', 'alphanohtml'))) {
+            setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("Subject")), null, 'errors');
+            $error++;
+        }
+        if (empty(GETPOST('ticket_type', 'aZ09'))) {
+            setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("Type")), null, 'errors');
+            $error++;
+        }
+        if (empty(GETPOST('ticket_category', 'aZ09'))) {
+            setEventMessages($langs->trans("ErrorFieldRequired", $langs->transnoentities("Category")), null, 'errors');
+            $error++;
         }
 
-        // Set contact if selected
-        $contactid = GETPOST('ticket_contact_id', 'int');
-        if ($contactid > 0) {
-            $ticket->context['contactid'] = $contactid;
-        }
+        if (!$error) {
+            $ticket = new Ticket($db);
 
-        // Disable email notifications for ticket creation
-        $ticket->context['disableticketemail'] = 1;
+            // Get form data
+            $ticket->ref = $ticket->getDefaultRef($user);
+            $ticket->subject = GETPOST('ticket_subject', 'alphanohtml');
+            $ticket->message = GETPOST('ticket_message', 'restricthtml');
+            $ticket->fk_project = GETPOST('project_id');
+            $ticket->fk_soc = GETPOST('ticket_socid', 'int') ?: (isset($object->thirdparty->id) ? $object->thirdparty->id : 0);
+            $ticket->fk_user_assign = GETPOST('ticket_user_assign', 'int');
+            $ticket->type_code = GETPOST('ticket_type', 'aZ09');
+            $ticket->category_code = GETPOST('ticket_category', 'aZ09');
+            $ticket->timing = GETPOST('ticket_timing', 'int');
+            $ticket->status = 0; // New ticket
 
-        // Create the ticket
-        $result = $ticket->create($user);
+            // Handle date start
+            $date_start = GETPOST('ticket_date_start', 'int');
+            if ($date_start > 0) {
+                $ticket->datec = $date_start;
+            } else {
+                $ticket->datec = dol_now();
+            }
 
-        if ($result > 0) {
-            setEventMessages($langs->trans("TicketCreated"), null, 'mesgs');
-            // Redirect to avoid resubmission
-            header("Location: " . $_SERVER['PHP_SELF'] . '?from_id=' . $id . '&from_type=' . $fromType);
-            exit;
+            // Set contact if selected
+            $contactid = GETPOST('ticket_contact_id', 'int');
+            if ($contactid > 0) {
+                $ticket->context['contactid'] = $contactid;
+            }
+
+            // Disable email notifications for ticket creation
+            $ticket->context['disableticketemail'] = 1;
+
+            // Create the ticket
+            $result = $ticket->create($user);
+
+            if ($result > 0) {
+                // Link ticket to project if project is set
+                $projectid = GETPOST('project_id', 'int');
+                if ($projectid > 0) {
+                    $ticket->setProject($projectid);
+                } elseif ($fromType == 'project' && $id > 0) {
+                    // If created from a project, link to that project
+                    $ticket->setProject($id);
+                }
+
+                // Link ticket to thirdparty (already set via fk_soc, but ensure link is created)
+                if ($ticket->fk_soc > 0) {
+                    // The fk_soc is already set, but we can also create an object link if needed
+                    // This is optional as fk_soc already links the ticket to the thirdparty
+                    $ticket->add_object_linked('societe', $ticket->fk_soc, $user);
+                }
+
+                setEventMessages($langs->trans("TicketCreated"), null, 'mesgs');
+                // Redirect to avoid resubmission - include tab to show ticket tab
+                header("Location: " . $_SERVER['PHP_SELF'] . '?from_id=' . $id . '&from_type=' . $fromType . '&tab=ticket');
+                exit;
+            } else {
+                setEventMessages($ticket->error, $ticket->errors, 'errors');
+                // Stay on ticket tab to show errors
+                $currentTab = 'ticket';
+            }
         } else {
-            setEventMessages($ticket->error, $ticket->errors, 'errors');
+            // Stay on ticket tab to show errors
+            $currentTab = 'ticket';
         }
     }
 }
