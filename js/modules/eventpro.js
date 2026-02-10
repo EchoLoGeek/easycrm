@@ -23,7 +23,7 @@
  */
 
 // Create namespace if not exists
-if (!window.reedcrm) {
+if (!window.reedcrm) { 
   window.reedcrm = {};
 }
 
@@ -146,12 +146,19 @@ window.reedcrm.eventpro.injectIframeCSS = function(iframe) {
  * @returns {void}
  */
 window.reedcrm.eventpro.refreshProjectRow = function(projectId) {
-  if (!projectId) return;
+  if (!projectId) {
+    window.location.reload();
+    return;
+  }
 
   var baseUrl = window.location.href.split('&action=')[0].split('#')[0];
   var curTr = $('tr[data-rowid="' + projectId + '"]');
 
-  if (!curTr.length) return;
+  if (!curTr.length) {
+    // Not on list page (e.g. card.php, messaging.php), reload the page
+    window.location.reload();
+    return;
+  }
 
   // Add a loading indicator
   curTr.css('opacity', '0.5');
@@ -212,8 +219,26 @@ window.reedcrm.eventpro.modalCloseWatcher = function() {
  * @returns {void}
  */
 window.reedcrm.eventpro.event = function() {
-  // Intercept clicks on reedcrm modal buttons to track initial URL
-  $(document).on('click', '.reedcrm-modal-open', function(e) {
+  var modalSelector = '#' + window.reedcrm.eventpro.modalId;
+
+  // Close modal: click on X button
+  $(document).on('click', modalSelector + ' .modal-close, ' + modalSelector + ' .modal-close i', function(e) {
+    e.preventDefault();
+    var $modal = $(modalSelector);
+    $modal.removeClass('modal-active');
+    $modal.find('iframe').attr('src', '');
+  });
+
+  // Close modal: click on overlay (the modal background, not the container)
+  $(document).on('click', modalSelector, function(e) {
+    if ($(e.target).is(modalSelector)) {
+      $(this).removeClass('modal-active');
+      $(this).find('iframe').attr('src', '');
+    }
+  });
+
+  // Intercept clicks on reedcrm modal buttons to open modal and load iframe
+  $(document).on('click', '.reedcrm-modal-open, .reedcrm-card-modal-open', function(e) {
     var $button = $(this);
     var modalUrl = $button.attr('data-modal-url');
     var projectId = $button.attr('data-project-id');
