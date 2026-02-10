@@ -494,6 +494,54 @@ class modReedCRM extends DolibarrModules
         $this->menu[$r++] = [
             'fk_menu'  => 'fk_mainmenu=reedcrm',
             'type'     => 'left',
+            'titre'    => $langs->transnoentities('Opportunities'),
+            'prefix'   => '<i class="fas fa-project-diagram pictofixedwidth"></i>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'opportunities',
+            'url'      => '/projet/list.php',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => $langs->transnoentities('OpenedPropals'),
+            'prefix'   => '<i class="fas fa-file-signature pictofixedwidth"></i>',
+            'mainmenu' => 'reedcrm',
+            'leftmenu' => 'openedpropals',
+            'url'      => '/comm/propal/list.php?search_status=1',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
+            'titre'    => $langs->transnoentities('RecurringInvoices'),
+            'prefix'   => '<i class="fas fa-file-invoice-dollar pictofixedwidth"></i>',
+            'mainmenu' => 'reedcrm',
+             'leftmenu' => 'recurringinvoices',
+            'url'      => '/compta/facture/list.php?search_status=4',
+            'langs'    => 'reedcrm@reedcrm',
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'reedcrm\')',
+            'perms'    => '$user->hasRight(\'reedcrm\', \'read\')',
+            'target'   => '',
+            'user'     => 0,
+        ];
+
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=reedcrm',
+            'type'     => 'left',
             'titre'    => $langs->trans('Tools'),
             'prefix'   => '<i class="fas fa-wrench pictofixedwidth"></i>',
             'mainmenu' => 'reedcrm',
