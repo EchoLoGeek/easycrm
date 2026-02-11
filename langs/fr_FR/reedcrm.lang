@@ -216,6 +216,9 @@ LabelLength                            = Taille libellé
 LabelLengthDescription                 = Taille maximum du champ libellé
 WarningTaskLabelCustom                 = Attention, vous vous rapprochez du nombre de caractères maximum autorisé (%d)
 ProductLastSellList                    = Dernières ventes du produit (Commande et Facture)
+Opportunities                          = Opportunités
+OpenedPropals                          = PR ouvertes
+RecurringInvoices                      = Factures récurrentes
 
 # Traductions pour ReedCRM - Notifications d'appel
 IncomingCall                                                         = Appel entrant
@@ -301,6 +304,7 @@ ProjectsImported = %s projets importés sur %s lignes.
 ProjectsImportErrors = %s lignes n'ont pas pu être importées.
 NbLines = Nombre de lignes
 ProjectImport = Import de projet
+ImportedProjectList = Liste des projets importés
 
 # Onglet Keyyo pour tiers
 KeyyoCalls = Appels Keyyo

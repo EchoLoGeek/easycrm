@@ -359,7 +359,11 @@ class ActionsReedcrm
                     $out .= ' - ' . '<span>' . $langs->trans('LastCommercialReminderDate') . ' : ' . dol_print_date($lastActionComm->datec, 'dayhourtext', 'tzuser') . '</span>';
                 }
                 if ($user->hasRight('agenda', 'myactions', 'create')) {
-                    $out .= dolButtonToOpenUrlInDialogPopup('quickEventCreation' . $object->id, $langs->transnoentities('QuickEventCreation'), '<span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('QuickEventCreation') . '"></span>', '/custom/reedcrm/view/quickevent.php' . $url, '', 'classlink button bordertransp', "window.saturne.toolbox.checkIframeCreation();");
+                    $modalId = 'eventproCardModal';
+                    $cardProUrl = DOL_URL_ROOT . '/custom/reedcrm/view/procard.php?from_id=' . $object->id . '&from_type=project&project_id=' . $object->id;
+                    $out .= ' <span class="fa fa-plus-circle valignmiddle paddingleft reedcrm-card-modal-open" style="cursor:pointer;" title="' . dol_escape_htmltag($langs->trans('QuickEventCreation')) . '" data-project-id="' . $object->id . '" data-modal-url="' . dol_escape_htmltag($cardProUrl) . '">';
+                    $out .= '<input type="hidden" class="modal-options" data-modal-to-open="' . $modalId . '">';
+                    $out .= '</span>';
                 }
                 if (!empty($lastActionComm)) {
                     $out .= '<br>' . dolButtonToOpenUrlInDialogPopup('lastActionComm' . $object->id, $langs->transnoentities('LastEvent') . ' : ' . $lastActionComm->label, $form->textwithpicto(img_picto('', $lastActionComm->picto) . ' ' . $lastActionComm->label, $lastActionComm->note_private), '/comm/action/card.php?id=' . $lastActionComm->id, '', 'classlink button bordertransp', "window.saturne.toolbox.checkIframeCreation();");
@@ -369,6 +373,45 @@ class ActionsReedcrm
                 ?>
                 <script>
                     jQuery('.tableforfield').last().append(<?php echo json_encode($out); ?>)
+                </script>
+                <?php
+
+                // Inject CSS for the eventpro side modal
+                $reedcrmMainCssPath = dol_buildpath('/custom/reedcrm/css/reedcrm.min.css', 1);
+                $reedcrmCssPath = dol_buildpath('/custom/reedcrm/css/temp-framework.css', 1);
+                print '<link href="' . $reedcrmMainCssPath . '" rel="stylesheet">';
+                print '<link href="' . $reedcrmCssPath . '" rel="stylesheet">';
+
+                $modalId = 'eventproCardModal';
+                $langs->load('reedcrm@reedcrm');
+                ?>
+                <div class="wpeo-modal modal-eventpro" id="<?php echo $modalId; ?>">
+                    <div class="modal-container wpeo-modal-event">
+                        <div class="modal-header">
+                            <h2 class="modal-title"><?php echo dol_escape_htmltag($langs->trans('QuickEventCreation')); ?></h2>
+                            <div class="modal-close"><i class="fas fa-times"></i></div>
+                        </div>
+                        <div class="modal-content">
+                            <div id="eventproCardModal-loader" class="wpeo-loader"></div>
+                            <iframe id="eventproCardModal-iframe" src=""></iframe>
+                        </div>
+                    </div>
+                </div>
+                <script>
+                    // Only load eventpro.js if not already loaded (avoid double loading saturne.min.js)
+                    if (typeof window.reedcrm === 'undefined' || typeof window.reedcrm.eventpro === 'undefined') {
+                        var script = document.createElement('script');
+                        script.src = '<?php echo dol_buildpath('/custom/reedcrm/js/modules/eventpro.js', 1); ?>';
+                        script.onload = function() {
+                            if (window.reedcrm && window.reedcrm.eventpro && window.reedcrm.eventpro.init) {
+                                window.reedcrm.eventpro.init();
+                            }
+                        };
+                        document.body.appendChild(script);
+                    } else {
+                        // Already loaded, just re-init
+                        window.reedcrm.eventpro.init();
+                    }
                 </script>
                 <?php
             }
