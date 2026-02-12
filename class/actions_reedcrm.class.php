@@ -360,8 +360,12 @@ class ActionsReedcrm
                 }
                 if ($user->hasRight('agenda', 'myactions', 'create')) {
                     $modalId = 'eventproCardModal';
-                    $cardProUrl = DOL_URL_ROOT . '/custom/reedcrm/view/procard.php?from_id=' . $object->id . '&from_type=project&project_id=' . $object->id;
-                    $out .= ' <span class="fa fa-plus-circle valignmiddle paddingleft reedcrm-card-modal-open" style="cursor:pointer;" title="' . dol_escape_htmltag($langs->trans('QuickEventCreation')) . '" data-project-id="' . $object->id . '" data-modal-url="' . dol_escape_htmltag($cardProUrl) . '">';
+                    if (strpos($parameters['context'], 'thirdpartycomm') !== false) {
+                        $cardProUrl = DOL_URL_ROOT . '/custom/reedcrm/view/procard.php?from_id=' . $socid . '&from_type=societe';
+                    } else {
+                        $cardProUrl = DOL_URL_ROOT . '/custom/reedcrm/view/procard.php?from_id=' . $object->id . '&from_type=project&project_id=' . $object->id;
+                    }
+                    $out .= ' <span class="fa fa-plus-circle valignmiddle paddingleft reedcrm-card-modal-open" style="cursor:pointer;" title="' . dol_escape_htmltag($langs->trans('QuickEventCreation')) . '" data-project-id="' . (strpos($parameters['context'], 'projectcard') !== false ? $object->id : '') . '" data-modal-url="' . dol_escape_htmltag($cardProUrl) . '">';
                     $out .= '<input type="hidden" class="modal-options" data-modal-to-open="' . $modalId . '">';
                     $out .= '</span>';
                 }
